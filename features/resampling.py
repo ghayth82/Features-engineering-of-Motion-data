@@ -7,15 +7,10 @@ Created on Mon Sep 24 09:46:44 2018
 """
 
 # Imports
-import time
 import numpy as np
 import pandas as pd
 from scipy import signal
-import matplotlib.pyplot as plt
-from datetime import datetime
-from dateutil import tz
 import warnings
-import feature_extraction as fe
 
 warnings.filterwarnings(action='once')
 

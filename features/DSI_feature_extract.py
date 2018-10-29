@@ -1,4 +1,4 @@
-#from burg import _arburg2
+# Source Repository: https://github.com/seanmullane/DS6999_HAR
 import glob
 from astropy.stats import median_absolute_deviation
 import numpy as np

@@ -62,7 +62,7 @@ def getPosition(deviceid):
       return 'NA'
 
 # DataCollection csv with annotated timestamp data
-with open("./../DataCollection-06-14-2018.csv") as f:
+with open("/Users/sm7gc/Desktop/WASH/DataCollection-06-14-2018.csv") as f:
     reader = csv.reader(f)
     header = next(reader)
     data = [r for r in reader]
@@ -75,12 +75,14 @@ pid_index = []
 pid_col = 3 # Define which column of DataCollection csv contains PID
 for row in data[2:]:
     
+    curr_pid = row[pid_col-1][4:]
+    
     # Absolute Start/End per PID
-    if not row[pid_col-1] in pid_index: # if PID has not been added to pid_timestamps
-        pid_index.append(row[pid_col-1]) # add to running list of added PIDs
-        pid_timestamps.append([row[pid_col-1],row[pid_col],row[len(row)-1]]) # 
+    if not curr_pid in pid_index: # if PID has not been added to pid_timestamps
+        pid_index.append(curr_pid) # add to running list of added PIDs
+        pid_timestamps.append([curr_pid,row[pid_col],row[len(row)-1]]) # 
     else:
-        pid_timestamps[pid_index.index(row[pid_col-1])][2] = row[len(row)-1]
+        pid_timestamps[pid_index.index(curr_pid)][2] = row[len(row)-1]
                 
     # Start/End per Activity + Device Positions
     for i in range(pid_col,len(row),2):
@@ -103,8 +105,8 @@ data_collection_start = datetime.strptime("06/14/18 16:03:03",  "%m/%d/%y %H:%M:
 data_collection_end = datetime.strptime("06/14/18 17:38:52",  "%m/%d/%y %H:%M:%S")
 
 
-data_folder = './../Raw/06-14-18/Controlled/compressed' # Define data filepath(s)
-target_folder = './../Labeled/06-14-18/Controlled_Auto' # Define folder to store clean files
+data_folder = '/Users/sm7gc/Desktop/WASH/Raw/06-14-18/Controlled/compressed' # Define data filepath(s)
+target_folder = '/Users/sm7gc/Desktop/WASH/Labeled/06-14-18/Controlled_Auto' # Define folder to store clean files
 
 absolute_start_time = time.time()
 
@@ -204,7 +206,11 @@ for i in range(len(filenames)):
                 line["Participant ID"] = ""
                 
             line["Device Manufacturer"] = line.pop("DeviceManufacturer")
-            line["Device Model"] = line.pop("Device Model")
+#            line["Device Model"] = line.pop("Device Model")
+            if "DeviceModel" in line:
+                line.pop("DeviceModel")    
+            elif "Device Model" in line:
+                line.pop("Device Model")
             line["Operating System"] = line.pop("OperatingSystem")
             
         line["Activity"] = line.pop("Activity")
@@ -212,12 +218,6 @@ for i in range(len(filenames)):
         if "Device Position" in line:
             line["Device Position"] = line.pop("Device Position")
         
-        if "DeviceModel" in line:
-            line.pop("DeviceModel")
-            
-        if "Device Model" in line:
-            line.pop("Device Model")
-
         complete_data[file].append(line)
 
     elapsed_time = time.time() - start_time

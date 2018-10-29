@@ -6,14 +6,10 @@ Created on Mon Sep 24 09:46:44 2018
 @author: sm7gc
 """
 
-import time
-import matplotlib.pyplot as plt
-import pandas as pd
 import numpy as np
-import scipy
 from astropy.stats import median_absolute_deviation
 from scipy.stats import pearsonr
-#from scipy.stats import entropy
+from scipy.stats import entropy
 from scipy.stats import skew
 from scipy.stats import kurtosis
 
@@ -101,8 +97,6 @@ def ptop_acc(x, y, z, m):
     m_feat = [np.max(i)-np.min(i) for i in m]
     return x_feat, y_feat, z_feat, m_feat
 
-
-# VERIFY CALCULATION!
 def zcr_acc(x, y, z, m):
     x_feat = [(np.diff(np.sign(i))!= 0).sum() for i in x]
     y_feat = [(np.diff(np.sign(i))!= 0).sum() for i in y]
@@ -110,7 +104,6 @@ def zcr_acc(x, y, z, m):
     m_feat = [(np.diff(np.sign(i))!= 0).sum() for i in m]
     return x_feat, y_feat, z_feat, m_feat
 
-# VERIFY CALCULATION!
 def mcr_acc(x, y, z, m):
     x_feat = [(np.diff(np.sign(i-np.mean(i)))!= 0).sum() for i in x]
     y_feat = [(np.diff(np.sign(i-np.mean(i)))!= 0).sum() for i in y]
@@ -159,6 +152,13 @@ def cor_acc(x, y, z):
     yz_feat = [pearsonr(y[i],z[i])[0] for i in range(len(y))]
     xz_feat = [pearsonr(x[i],z[i])[0] for i in range(len(z))]
     return xy_feat, yz_feat, xz_feat
+
+def entropy_acc(x, y, z, m):
+    x_feat = [entropy(i) for i in x]
+    y_feat = [entropy(i) for i in y]
+    z_feat = [entropy(i) for i in z]
+    m_feat = [entropy(i) for i in m]
+    return x_feat, y_feat, z_feat, m_feat
 
 #def fft_acc(x, y, z, window_size, overlap=2):
 #    fftx = np.fft.fft(x)

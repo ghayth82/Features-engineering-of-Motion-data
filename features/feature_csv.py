@@ -12,16 +12,13 @@ Created on Thu Oct 25 09:37:55 2018
 #filenames = [os.path.join(dp, f) for dp, dn, filenames in os.walk(data_folder) for f in filenames if os.path.splitext(f)[1] == '.csv']
 #filenames = ['./../Controlled/Accelerometer.csv','./../Controlled/Compass.csv','./../Controlled/Smartwatch_LinearAcceleration.csv']
 
-# Imports
 import time
-#import numpy as np
 import pandas as pd
 from datetime import datetime
 from dateutil import tz
 import warnings
 import feature_extraction as fe
 import resampling as re
-import matplotlib.pyplot as plt
 
 warnings.filterwarnings("ignore")
 
@@ -44,9 +41,8 @@ def formatTimestamp(timestamp):
 
 absolute_start_time = time.time() # Program Start Time
 
-
-filenames = ['/Users/sanjanamendu/Desktop/DARPA/Controlled/Accelerometer.csv']
-target_path = '/Users/sanjanamendu/Desktop/DARPA/Featurized'
+filenames = ['/Users/sm7gc/Desktop/WASH/Labeled/06-14-18/Controlled/Accelerometer.csv']
+target_path = '/Users/sm7gc/Desktop/WASH/Featurized'
 
 # Read Raw Accelerometer Data
 for i in range(len(filenames)):
@@ -89,7 +85,7 @@ for i in range(len(filenames)):
         z = curr_df['Z']
         
         pid = curr_df['PID']
-        pid[pd.isna(pid)] = 'Unknown'
+        pid = [p if p=='Unknown' else p[4:] for p in pid]
         act = curr_df['Activity']
         act[pd.isna(act)] = 'Unknown'
         pos = curr_df['Device Position']
@@ -113,9 +109,10 @@ for i in range(len(filenames)):
         # Feature Dictionary
         features = {} # dictionary for calculated features
         
-        # Timestamp
+        # Timestamps
         print("----- Timestamp")
-        features['timestamp'] = [datetime.strftime(curr_df.index[i],'%m-%d-%Y %H:%M:%S') for i in  range(0, len(curr_df)-window_size, hop)]
+        features['start_timestamp'] = [datetime.strftime(curr_df.index[i],'%m-%d-%Y %H:%M:%S') for i in  range(0, len(curr_df)-window_size, hop)]
+        features['end_timestamp'] = [datetime.strftime(curr_df.index[i],'%m-%d-%Y %H:%M:%S') for i in  range(window_size, len(curr_df), hop)]
         
         # Labels
         print("----- Labels")
@@ -146,7 +143,11 @@ for i in range(len(filenames)):
         # Energy
         print("----- Energy")
         features['energy_x'], features['energy_y'], features['energy_z'], features['energy_m'] = fe.energy_acc(x,y,z,m)
-        
+                
+        # Skewness
+        print("----- Entropy")
+        features['entropy_x'], features['entropy_y'], features['entropy_z'], features['entropy_m'] = fe.entropy_acc(x,y,z,m)
+
         # Median Absolute Deviation
         print("----- Median Absolute Deviation")
         features['mad_x'], features['mad_y'], features['mad_z'], features['mad_m'] = fe.mad_acc(x,y,z,m)
@@ -207,3 +208,4 @@ for i in range(len(filenames)):
         print("Feature Extraction Runtime: " + str(time.time() - start_time)) # Loop Runtime
     
 print("Total Program Runtime: " + str(time.time() - absolute_start_time)) # Program End Time
+

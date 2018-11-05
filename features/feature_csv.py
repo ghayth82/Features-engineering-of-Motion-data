@@ -6,17 +6,14 @@ Created on Thu Oct 25 09:37:55 2018
 @author: sm7gc
 """
 
-#import os
-#data_folder = './../../Controlled' # Laptop filepath
-#data_folder = './../../Labeled/06-14-18/Controlled' # Lab Comp
-#filenames = [os.path.join(dp, f) for dp, dn, filenames in os.walk(data_folder) for f in filenames if os.path.splitext(f)[1] == '.csv']
-#filenames = ['./../Controlled/Accelerometer.csv','./../Controlled/Compass.csv','./../Controlled/Smartwatch_LinearAcceleration.csv']
-
 import time
+import os
+import shutil
 import pandas as pd
 from datetime import datetime
 from dateutil import tz
 import warnings
+import itertools
 import feature_extraction as fe
 import resampling as re
 
@@ -41,8 +38,11 @@ def formatTimestamp(timestamp):
 
 absolute_start_time = time.time() # Program Start Time
 
-filenames = ['/Users/sm7gc/Desktop/WASH/Labeled/06-14-18/Controlled/Accelerometer.csv']
-target_path = '/Users/sm7gc/Desktop/WASH/Featurized'
+filenames = ['Path to your accelerometer data/Accelerometer.csv']
+target_path = '/Path to your output file/new'
+
+shutil.rmtree(target_path)
+os.makedirs(target_path)
 
 # Read Raw Accelerometer Data
 for i in range(len(filenames)):
@@ -65,18 +65,18 @@ for i in range(len(filenames)):
     target_hz = 40
     total_start = datetime.strptime('6/14/2018 16:03:00',  "%m/%d/%Y %H:%M:%S")
     total_end = datetime.strptime('6/14/2018  17:38:54',  "%m/%d/%Y %H:%M:%S")
-    
+
     start_time = time.time()
-    resamp_df, devices = re.resample(feat_df,total_start,total_end,target_hz)
+    resamp_df, keys = re.resample(feat_df,total_start,total_end,target_hz,'Sensus OS')
     print("Resampling Runtime: " + str(time.time() - start_time)) # Loop Runtime
     
     absolute_start_time = time.time() # Program Start Time
-    for d in range(len(devices)):
-        device_name = devices[d]
+    for k in range(len(keys)):
+        key = keys[k]
         start_time = time.time()
         
-        print("Device " + str(d+1) + " out of " + str(len(devices)) + ' (' + device_name + ')')
-        curr_df = resamp_df[device_name]
+        print("Device " + str(k+1) + " out of " + str(len(keys)) + ' (' + key + ')')
+        curr_df = resamp_df[key]
         
         # Axis Separation
         print(".....Loading Data.....")
@@ -85,7 +85,7 @@ for i in range(len(filenames)):
         z = curr_df['Z']
         
         pid = curr_df['PID']
-        pid = [p if p=='Unknown' else p[4:] for p in pid]
+        pid[pd.isna(pid)] = 'Unknown'
         act = curr_df['Activity']
         act[pd.isna(act)] = 'Unknown'
         pos = curr_df['Device Position']
@@ -202,8 +202,19 @@ for i in range(len(filenames)):
         features['cor_xy'], features['cor_yz'], features['cor_xz'] = fe.cor_acc(x,y,z)
           
         final_feat = pd.DataFrame.from_dict(features)
-        filename = target_path+'/'+device_name+'_feat.csv'
-        final_feat.to_csv(filename, sep=',', encoding='utf-8')
+        
+        # Subsetting by participant and OS
+        feat_grouper = final_feat.groupby('pid')
+        participants = list(final_feat.groupby("pid").groups)
+        pairs = list(itertools.product(participants,[key]))
+        print(pairs)
+        
+        for p in pairs:
+            pid = p[0]
+            op_sys = p[1].replace(" Sensus","")
+            filename = target_path+'/'+pid+'_'+op_sys+'_feat.csv'
+            sep_df = feat_grouper.get_group(pid)
+            sep_df.to_csv(filename, sep=',', encoding='utf-8',index=False)
     
         print("Feature Extraction Runtime: " + str(time.time() - start_time)) # Loop Runtime
     

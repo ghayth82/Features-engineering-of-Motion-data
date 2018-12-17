@@ -3,28 +3,28 @@
 """
 Created on Mon Sep 24 09:46:44 2018
 
-@author: sm7gc
+@author: mob3f
 """
 
 import numpy as np
 from astropy.stats import median_absolute_deviation
 from scipy.stats import pearsonr
-from scipy.stats import entropy
 from scipy.stats import skew
 from scipy.stats import kurtosis
+from librosa.feature import mfcc
+from pyentrp import entropy as ent
 
+
+# =============================================================================
+# Accelerometer (Tri-Axial) Features
+# =============================================================================
 
 def mag_acc(x, y, z):
     mpre = x*x+y*y+z*z
     m = np.sqrt(mpre)
     m_smooth = m
-    m_smooth[2:(len(m_smooth)-2)] = [(m[i-2] + m[i-1] +m[i] + m[i+1] + m[i+2])/5 for i ,val in enumerate(m[2:(len(m)-2)])]
+#    m_smooth[2:(len(m_smooth)-2)] = [(m[i-2] + m[i-1] +m[i] + m[i+1] + m[i+2])/5 for i ,val in enumerate(m[2:(len(m)-2)])]
     return m_smooth
-
-#def stft(x, window_size, overlap=2):
-#    hop = int(window_size / overlap)
-#    w = scipy.hanning(window_size+1)[:-1]
-#    return [np.fft.rfft(w*x[i:i+window_size]) for i in range(0, len(x)-window_size, hop)] 
 
 def mean_acc(x, y, z, m):
     x_feat = [np.mean(i) for i in x]
@@ -154,40 +154,22 @@ def cor_acc(x, y, z):
     return xy_feat, yz_feat, xz_feat
 
 def entropy_acc(x, y, z, m):
-    x_feat = [entropy(i) for i in x]
-    y_feat = [entropy(i) for i in y]
-    z_feat = [entropy(i) for i in z]
-    m_feat = [entropy(i) for i in m]
+    x_feat = [ent.permutation_entropy(list(i)) for i in x]
+    y_feat = [ent.permutation_entropy(list(i)) for i in y]
+    z_feat = [ent.permutation_entropy(list(i)) for i in z]
+    m_feat = [ent.permutation_entropy(list(i)) for i in m]
     return x_feat, y_feat, z_feat, m_feat
 
-#def fft_acc(x, y, z, window_size, overlap=2):
-#    fftx = np.fft.fft(x)
-#    timestep = 0.1
-#    freq = np.fft.fftfreq(len(x), d=timestep)   
-#    return fftx
-    
+def mfcc_acc(x, y, z, m):
+    x_feat = [mfcc(i.values) for i in x]
+    y_feat = [mfcc(i.values) for i in y]
+    z_feat = [mfcc(i.values) for i in z]
+    m_feat = [mfcc(i.values) for i in m]
+    return x_feat, y_feat, z_feat, m_feat
 
-## Accelerometer Featurization: https://github.com/yatharthsharma/Activity-Recognition/blob/master/featues.py
-#def triaxial_feat(x,y,z):
-#    
-#    energy_signal = [np.sum(np.power(abs(stft_signal[i]),2)) for i in range(len(stft_signal))]
-#    plt.plot(energy_signal)
-#    plt.show()
-#    #SMA + Signal magnitude vector
-#    smasum = 0
-#    smvsum = 0
-#    for i in range(len(x)):
-#         smasum += (abs(x[i]) + abs(y[i]) + abs(z[i]))
-#         smvsum += x[i]**2 + y[i]**2 + z[i]**2;
-#    sma=smasum / len(x)
-#    smv= np.sqrt(smvsum)/len(x)
-#    
-#    absolute_start_time = time.time()
-#    
-#    print("Total Program Runtime: " + str(time.time() - absolute_start_time))
-#    
-#    valmean, valmax, valmin, valstd, valenergy = feature(m,120)
-#    diff = np.subtract(valmax,valmin)
-#
-#
-#    return [valmean, valmax, valmin, valstd, valenergy, diff, sma,smv]
+def fft_acc(x, y, z, m):
+    x_feat = [np.fft.fft(i) for i in x]
+    y_feat = [np.fft.fft(i) for i in y]
+    z_feat = [np.fft.fft(i) for i in z]
+    m_feat = [np.fft.fft(i) for i in m]
+    return x_feat, y_feat, z_feat, m_feat
